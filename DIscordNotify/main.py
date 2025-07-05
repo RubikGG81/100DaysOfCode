@@ -162,13 +162,13 @@ class AdvancedDiscordMonitor:
         ttk.Label(config_frame, text="Token Bot Telegram:").pack(anchor="w")
         self.telegram_token_entry = ttk.Entry(config_frame, width=60)
         self.telegram_token_entry.pack(fill="x", padx=5, pady=2)
-        self.telegram_token_entry.insert(0, "7819173674:AAH7Lq0tzpZNxsHDwa5KyBXDy6qIRRzSmGs")
+        self.telegram_token_entry.insert(0, "TG_TOKEN")
         
         # Chat ID
         ttk.Label(config_frame, text="Chat ID Telegram:").pack(anchor="w")
         self.telegram_chat_entry = ttk.Entry(config_frame, width=60)
         self.telegram_chat_entry.pack(fill="x", padx=5, pady=2)
-        self.telegram_chat_entry.insert(0, "-4842484227")
+        self.telegram_chat_entry.insert(0, "CHAT_ID")
         
         # Impostazioni monitoraggio
         settings_frame = ttk.LabelFrame(self.root, text="Impostazioni Monitoraggio")
@@ -922,8 +922,8 @@ def esempio_utilizzo():
     """Esempio di come usare il monitor in modalità semplificata"""
     
     # Configurazione
-    TELEGRAM_TOKEN = "7819173674:AAH7Lq0tzpZNxsHDwa5KyBXDy6qIRRzSmGs"
-    TELEGRAM_CHAT_ID = "-4842484227"
+    TELEGRAM_TOKEN = "TG_TOKEN"
+    TELEGRAM_CHAT_ID = "CHAT_ID"
     
     # Crea monitor
     monitor = SimpleDiscordMonitor(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID)
