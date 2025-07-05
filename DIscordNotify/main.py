@@ -8,6 +8,9 @@ import threading
 import time
 import hashlib
 import mss
+from dataclasses import dataclass
+import json
+import os
 
 class AreaSelector:
     def __init__(self, callback):
@@ -149,7 +152,7 @@ class AdvancedDiscordMonitor:
     def setup_gui(self):  # sourcery skip: extract-duplicate-method
         self.root = tk.Tk()
         self.root.title("Discord Advanced Screen Monitor")
-        self.root.geometry("600x500")
+        self.root.geometry("600x800")
         
         # Configurazione
         config_frame = ttk.LabelFrame(self.root, text="Configurazione")
@@ -159,7 +162,7 @@ class AdvancedDiscordMonitor:
         ttk.Label(config_frame, text="Token Bot Telegram:").pack(anchor="w")
         self.telegram_token_entry = ttk.Entry(config_frame, width=60)
         self.telegram_token_entry.pack(fill="x", padx=5, pady=2)
-        self.telegram_token_entry.insert(0, "819173674:AAH7Lq0tzpZNxsHDwa5KyBXDy6qIRRzSmGs")
+        self.telegram_token_entry.insert(0, "7819173674:AAH7Lq0tzpZNxsHDwa5KyBXDy6qIRRzSmGs")
         
         # Chat ID
         ttk.Label(config_frame, text="Chat ID Telegram:").pack(anchor="w")
@@ -183,11 +186,24 @@ class AdvancedDiscordMonitor:
         sensitivity_spin = ttk.Spinbox(settings_frame, from_=1, to=50, textvariable=self.sensitivity_var)
         sensitivity_spin.pack(anchor="w", padx=5)
         
-        # Filtri testo
-        ttk.Label(settings_frame, text="Parole chiave da cercare (separate da virgola):").pack(anchor="w")
+        #Filtro selezione sorgente
+        ttk.Label(settings_frame, text="Filtro sorgente copiata:").pack(anchor="w")
+        self.source_filter = ttk.Combobox(settings_frame, values=["@Eliz Challenge","Altri WWG"])
+        self.source_filter.set("@Eliz Challenge")
+        self.source_filter.pack(anchor="w", padx=5)
+        
+        # Filtri testo generici
+        ttk.Label(settings_frame, text="Parole chiave generiche (separate da virgola):").pack(anchor="ne")
         self.keywords_entry = ttk.Entry(settings_frame, width=60)
-        self.keywords_entry.pack(fill="x", padx=5, pady=2)
-        self.keywords_entry.insert(0, "ora fa,minuto fa,minuti fa,oggi alle,ieri alle")
+        self.keywords_entry.pack(fill="x", padx=2, pady=2)
+        self.keywords_entry.insert(0, "long,short,@")
+        
+        # Filtri testo specifici @eliz
+        ttk.Label(settings_frame, text="Parole chiave @Eliz (separate da virgola):").pack(anchor="ne")
+        self.keywords_entry_eliz = ttk.Entry(settings_frame, width=60)
+        self.keywords_entry_eliz.pack(fill="x", padx=2, pady=2)
+        self.keywords_entry_eliz.insert(0, "current trade")
+        
         
         # Area selezionata
         area_frame = ttk.LabelFrame(self.root, text="Area Monitoraggio")
@@ -236,6 +252,23 @@ class AdvancedDiscordMonitor:
         self.is_monitoring = False
         self.monitor_thread = None
         self.last_screenshot = None
+        
+        # Carica messaggi precedenti all'avvio
+        self.last_messages = self.load_last_messages()
+        
+        # Bind evento di chiusura per salvare i messaggi
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        
+    @dataclass
+    class eliz_data_trade:
+        limit_order: bool
+        token_name: str
+        bought_token_amount: int
+        balance: int       
+        entry_price: float
+        stop_loss: any
+        take_profit: any
+        e_retest: bool
         
     def select_area(self):
         """Avvia la selezione dell'area con interfaccia grafica"""
@@ -363,9 +396,8 @@ class AdvancedDiscordMonitor:
         """Loop principale di monitoraggio"""
         import pytesseract
         import hashlib
-        
+        source_selection = self.source_filter.get()
         last_hash = None
-        last_messages = []
         
         while self.is_monitoring:
             try:
@@ -407,7 +439,11 @@ class AdvancedDiscordMonitor:
                     
                     if text.strip():
                         # Rileva nuovi messaggi
-                        new_messages = self.detect_new_messages(text, last_messages)
+                        
+                        if source_selection == "@Eliz Challenge":
+                            new_messages = self.detect_new_messages_eliz(text, self.last_messages)
+                        else:
+                            new_messages = self.detect_new_messages(text, self.last_messages)
                         
                         for message in new_messages:
                             self.log("INFO", f"Nuovo messaggio rilevato: {message[:50]}...")
@@ -415,11 +451,14 @@ class AdvancedDiscordMonitor:
                             
                             # Aggiungi a storico
                             message_hash = hashlib.md5(message.encode()).hexdigest()
-                            last_messages.append(message_hash)
+                            self.last_messages.append(message_hash)
                             
                             # Mantieni solo ultimi 30 messaggi
-                            if len(last_messages) > 30:
-                                last_messages = last_messages[-30:]
+                            if len(self.last_messages) > 30:
+                                self.last_messages = self.last_messages[-30:]
+                            
+                            # Salva automaticamente dopo ogni nuovo messaggio
+                            self.save_last_messages()
                 
                 # Aspetta prima del prossimo controllo
                 interval = int(self.interval_var.get())
@@ -461,8 +500,8 @@ class AdvancedDiscordMonitor:
                 
                 # Inizia nuovo messaggio
                 current_message = [line]
-            
-                
+            else:
+                current_message.append(line)
         
         # Ultimo messaggio
         if current_message:
@@ -471,6 +510,57 @@ class AdvancedDiscordMonitor:
             
             if message_hash not in last_messages:
                 new_messages.append(message_text)
+        
+        return new_messages
+    
+    def detect_new_messages_eliz(self, text, last_messages):
+        """Rileva nuovi messaggi nel testo"""
+        new_messages = []
+        
+        # Ottieni parole chiave
+        keywords = [kw.strip() for kw in self.keywords_entry_eliz.get().split(',')]
+        
+        # Dividi in righe
+        lines = text.split('\n')
+        
+        # Trova messaggi con parole chiave
+        current_message = []
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            
+            # Controlla se contiene parole chiave
+            has_keyword = any(kw in line.lower() for kw in keywords if kw)
+            
+            if has_keyword:
+                # Salva messaggio precedente
+                if current_message:
+                    message_text = '\n'.join(current_message)
+                    message_hash = hashlib.md5(message_text.encode()).hexdigest()
+                    
+                    if message_hash not in last_messages:
+                        new_messages.append(message_text)
+                
+                # Inizia nuovo messaggio
+                current_message = [line]
+            elif not line.startswith("(Edited"):
+                    current_message.append(line)
+        
+        # Ultimo messaggio
+        if current_message:
+            message_text = '\n'.join(current_message)
+            message_hash = hashlib.md5(message_text.encode()).hexdigest()
+            
+            if message_hash not in last_messages:
+                new_messages.append(message_text)
+        
+        # for message in new_messages:
+        #     if "Current Trade" in message:
+        #         trade_data = self.parse_eliz_trade(message)
+        #         self.log("INFO", f"Trade rilevato: {trade_data.token_name} - Entry: {trade_data.entry_price}")
+        #         # Qui puoi aggiungere logica per gestire il trade
         
         return new_messages
     
@@ -533,6 +623,208 @@ class AdvancedDiscordMonitor:
     def run(self):
         """Avvia l'applicazione"""
         self.root.mainloop()
+
+    def parse_eliz_trade(self, text: str) -> eliz_data_trade:
+        # sourcery skip: low-code-quality
+        """Parser per estrarre i dati del trade dalla stringa di Eliz"""
+        try:
+            # Inizializza variabili con valori di default
+            limit_order = False
+            token_name = ""
+            bought_token_amount = 0
+            balance = 0
+            entry_price = 0.0
+            stop_loss = ""
+            take_profit = ""
+            e_retest = False
+            
+            # Dividi il testo in righe
+            lines = text.strip().split('\n')
+            
+            for line in lines:
+                line = line.strip()
+                if not line:
+                    continue
+                
+                if line.endswith("LIMIT ORDER"):
+                    limit_str = line.replace("LIMIT ORDER", "")
+                    limit_order = True
+                
+                    
+                # Token Name
+                if line.startswith("Token Name:"):
+                    token_name = line.replace("Token Name:", "").strip()
+                    
+                # Bought Token Amount
+                elif line.startswith("Bought Token Amount:"):
+                    amount_str = line.replace("Bought Token Amount:", "").strip()
+                    try:
+                        bought_token_amount = int(amount_str)
+                    except ValueError:
+                        bought_token_amount = 0
+                        
+                # Balance
+                elif line.startswith("Balance:"):
+                    balance_str = line.replace("Balance:", "").strip()
+                    try:
+                        balance = int(balance_str)
+                    except ValueError:
+                        balance = 0
+                        
+                # Entry Price
+                elif line.startswith("Entry Price:"):
+                    price_str = line.replace("Entry Price:", "").strip()
+                    try:
+                        entry_price = float(price_str)
+                    except ValueError:
+                        entry_price = 0.0
+                        
+                # Stop Loss - può essere numero o stringa
+                elif line.startswith("Stop Loss:"):
+                    sl_str = line.replace("Stop Loss:", "").strip()
+                    try:
+                        # Prova prima come float
+                        stop_loss = float(sl_str)
+                    except ValueError:
+                        # Se non è un numero, mantieni come stringa
+                        stop_loss = sl_str
+                        
+                # Take Profit - può essere numero o stringa
+                elif line.startswith("Take Profit:"):
+                    tp_str = line.replace("Take Profit:", "").strip()
+                    try:
+                        # Prova prima come float
+                        take_profit = float(tp_str)
+                    except ValueError:
+                        # Se non è un numero, mantieni come stringa
+                        take_profit = tp_str
+                    
+                # EP Retest
+                elif line.startswith("EP Retest:"):
+                    retest_str = line.replace("EP Retest:", "").strip()
+                    e_retest = retest_str.lower() in ['true', 'yes', '1', 'si', 'sì']
+                    
+            
+
+            
+            # Crea e restituisci l'oggetto dataclass
+            return self.eliz_data_trade(
+                limit_order=limit_order,
+                token_name=token_name,
+                bought_token_amount=bought_token_amount,
+                balance=balance,
+                entry_price=entry_price,
+                stop_loss=stop_loss,
+                take_profit=take_profit,
+                e_retest=e_retest
+            )
+            
+        except Exception as e:
+            self.log("ERROR", f"Errore nel parsing del trade: {e}")
+            # Restituisci un oggetto con valori di default in caso di errore
+            return self.eliz_data_trade(
+                limit_order=False,
+                token_name="",
+                bought_token_amount=0,
+                balance=0,
+                entry_price=0.0,
+                stop_loss="",
+                take_profit="",
+                e_retest=False
+            )
+
+    def format_eliz_trade(self, trade: eliz_data_trade) -> str:
+        # sourcery skip: hoist-statement-from-if
+        """Converte un oggetto eliz_data_trade in una stringa formattata"""
+        try:
+            lines = []
+            
+            # Aggiungi LIMIT ORDER se presente
+            if trade.limit_order:
+                lines.append("LIMIT ORDER")
+            
+            # Token Name
+            if trade.token_name:
+                lines.append(f"Token Name: {trade.token_name}")
+            
+            # Bought Token Amount
+            if trade.bought_token_amount > 0:
+                lines.append(f"Bought Token Amount: {trade.bought_token_amount}")
+            
+            # Balance
+            if trade.balance > 0:
+                lines.append(f"Balance: {trade.balance}")
+            
+            # Entry Price
+            if trade.entry_price > 0:
+                lines.append(f"Entry Price: {trade.entry_price}")
+            
+            # Stop Loss
+            if trade.stop_loss:
+                if isinstance(trade.stop_loss, (int, float)):
+                    lines.append(f"Stop Loss: {trade.stop_loss}")
+                else:
+                    lines.append(f"Stop Loss: {trade.stop_loss}")
+            
+            # Take Profit
+            if trade.take_profit:
+                if isinstance(trade.take_profit, (int, float)):
+                    lines.append(f"Take Profit: {trade.take_profit}")
+                else:
+                    lines.append(f"Take Profit: {trade.take_profit}")
+            
+            # EP Retest
+            if trade.e_retest:
+                lines.append("EP Retest: true")
+            else:
+                lines.append("EP Retest: false")
+            
+            # Unisci tutte le righe
+            return "\n".join(lines)
+            
+        except Exception as e:
+            self.log("ERROR", f"Errore nella formattazione del trade: {e}")
+            return "Errore nella formattazione del trade"
+
+    def save_last_messages(self):
+        """Salva last_messages in un file JSON"""
+        try:
+            with open('last_messages.json', 'w', encoding='utf-8') as f:
+                json.dump(self.last_messages, f, ensure_ascii=False, indent=2)
+            self.log("INFO", f"Salvati {len(self.last_messages)} messaggi in last_messages.json")
+        except Exception as e:
+            self.log("ERROR", f"Errore nel salvataggio dei messaggi: {e}")
+    
+    def load_last_messages(self):
+        """Carica last_messages da un file JSON"""
+        try:
+            if os.path.exists('last_messages.json'):
+                with open('last_messages.json', 'r', encoding='utf-8') as f:
+                    messages = json.load(f)
+                self.log("INFO", f"Caricati {len(messages)} messaggi da last_messages.json")
+                return messages
+            else:
+                self.log("INFO", "Nessun file di messaggi precedenti trovato, partendo da zero")
+                return []
+        except Exception as e:
+            self.log("ERROR", f"Errore nel caricamento dei messaggi: {e}")
+            return []
+    
+    def on_closing(self):
+        """Gestisce la chiusura del programma"""
+        try:
+            # Salva i messaggi prima di chiudere
+            self.save_last_messages()
+            
+            # Ferma il monitoraggio se attivo
+            if self.is_monitoring:
+                self.stop_monitor()
+            
+            # Chiudi la finestra
+            self.root.destroy()
+        except Exception as e:
+            print(f"Errore durante la chiusura: {e}")
+            self.root.destroy()
 
 # Script di avvio semplificato
 class SimpleDiscordMonitor:
@@ -650,8 +942,8 @@ if __name__ == "__main__":
     print("1. GUI Avanzata")
     print("2. Modalità Semplificata")
     
-    choice = input("Scegli (1 o 2): ")
-    
+    #choice = input("Scegli (1 o 2): ")
+    choice = "1"
     if choice == "1":
         try:
             app = AdvancedDiscordMonitor()
