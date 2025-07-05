@@ -12,6 +12,14 @@ from dataclasses import dataclass
 import json
 import os
 
+# Carica variabili d'ambiente da file .env se presente
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # Se python-dotenv non è installato, ignora
+    pass
+
 class AreaSelector:
     def __init__(self, callback):
         self.callback = callback
@@ -162,13 +170,17 @@ class AdvancedDiscordMonitor:
         ttk.Label(config_frame, text="Token Bot Telegram:").pack(anchor="w")
         self.telegram_token_entry = ttk.Entry(config_frame, width=60)
         self.telegram_token_entry.pack(fill="x", padx=5, pady=2)
-        self.telegram_token_entry.insert(0, "7819173674:AAH7Lq0tzpZNxsHDwa5KyBXDy6qIRRzSmGs")
+        # Carica da variabile d'ambiente o lascia vuoto
+        telegram_token = os.getenv('TELEGRAM_TOKEN', '')
+        self.telegram_token_entry.insert(0, telegram_token)
         
         # Chat ID
         ttk.Label(config_frame, text="Chat ID Telegram:").pack(anchor="w")
         self.telegram_chat_entry = ttk.Entry(config_frame, width=60)
         self.telegram_chat_entry.pack(fill="x", padx=5, pady=2)
-        self.telegram_chat_entry.insert(0, "-4842484227")
+        # Carica da variabile d'ambiente o lascia vuoto
+        telegram_chat_id = os.getenv('TELEGRAM_CHAT_ID', '')
+        self.telegram_chat_entry.insert(0, telegram_chat_id)
         
         # Impostazioni monitoraggio
         settings_frame = ttk.LabelFrame(self.root, text="Impostazioni Monitoraggio")
@@ -921,9 +933,16 @@ class SimpleDiscordMonitor:
 def esempio_utilizzo():
     """Esempio di come usare il monitor in modalità semplificata"""
     
-    # Configurazione
-    TELEGRAM_TOKEN = "7819173674:AAH7Lq0tzpZNxsHDwa5KyBXDy6qIRRzSmGs"
-    TELEGRAM_CHAT_ID = "-4842484227"
+    # Configurazione da variabili d'ambiente
+    TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN', '')
+    TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID', '')
+    
+    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
+        print("Errore: Imposta le variabili d'ambiente TELEGRAM_TOKEN e TELEGRAM_CHAT_ID")
+        print("Crea un file .env nella cartella del progetto con:")
+        print("TELEGRAM_TOKEN=il_tuo_token")
+        print("TELEGRAM_CHAT_ID=il_tuo_chat_id")
+        return
     
     # Crea monitor
     monitor = SimpleDiscordMonitor(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID)
