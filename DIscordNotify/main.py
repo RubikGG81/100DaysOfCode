@@ -1,3 +1,4 @@
+# sourcery skip: use-contextlib-suppress
 import tkinter as tk
 from tkinter import ttk
 import pyautogui
@@ -326,25 +327,18 @@ class AdvancedDiscordMonitor:
             # 1. Grayscale
             gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
 
-            # 2. Slight upscale (1.5x)
-            scale_percent = 150
-            width = int(gray.shape[1] * scale_percent / 100)
-            height = int(gray.shape[0] * scale_percent / 100)
-            gray = cv2.resize(gray, (width, height), interpolation=cv2.INTER_CUBIC)
+            # 2. Upscale (200%)
+            gray_up = cv2.resize(gray, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
 
-            # 3. Sharpen
-            kernel = np.array([[0, -1, 0], [-1, 5,-1], [0, -1, 0]])
-            sharp = cv2.filter2D(gray, -1, kernel)
+            # 3. Inversione (bianco su nero -> nero su bianco)
+            inverted = cv2.bitwise_not(gray_up)
 
-            # 4. Invert (white text on black -> black text on white)
-            inverted = cv2.bitwise_not(sharp)
-
-            # Mostra e salva immagine preprocessata
-            self.show_preprocessed_image(inverted, window_title="Test OCR - Preprocessed", filename="test_ocr_preprocessed.png")
+            # Mostra e salva immagine preprocessata (dopo inversione)
+            self.show_preprocessed_image(inverted, window_title="Test OCR - Inverted", filename="test_ocr_inverted.png")
             
-            # OCR
+            # OCR (su immagine invertita)
             import pytesseract
-            custom_config = r'--oem 3 --psm 6 -l ita+eng'
+            custom_config = r'--oem 3 --psm 6 -l eng'
             text = pytesseract.image_to_string(inverted, config=custom_config)
             
             self.log("INFO", f"Test OCR completato. Testo rilevato: {len(text)} caratteri")
@@ -404,12 +398,13 @@ class AdvancedDiscordMonitor:
         
         self.log("INFO", "Monitoraggio fermato")
     
-    def monitor_loop(self):
+    def monitor_loop(self):  # sourcery skip: low-code-quality
         """Loop principale di monitoraggio"""
         import pytesseract
         import hashlib
         source_selection = self.source_filter.get()
         last_hash = None
+        first_message_dropped = False
         
         while self.is_monitoring:
             try:
@@ -458,12 +453,17 @@ class AdvancedDiscordMonitor:
                             new_messages = self.detect_new_messages(text, self.last_messages)
                         
                         for message in new_messages:
-                            self.log("INFO", f"Nuovo messaggio rilevato: {message[:50]}...")
-                            self.send_telegram_notification(message)
+                            if first_message_dropped:
+                                self.log("INFO", f"Nuovo messaggio rilevato: {message[:50]}...")
+                                self.send_telegram_notification(message)
+                                
+                                # Aggiungi a storico
+                                message_hash = hashlib.md5(message.encode()).hexdigest()
+                                self.last_messages.append(message_hash)
                             
-                            # Aggiungi a storico
-                            message_hash = hashlib.md5(message.encode()).hexdigest()
-                            self.last_messages.append(message_hash)
+                            else:
+                                first_message_dropped = True
+                                continue
                             
                             # Mantieni solo ultimi 30 messaggi
                             if len(self.last_messages) > 30:
@@ -603,6 +603,8 @@ class AdvancedDiscordMonitor:
                 self.log("INFO", "Notifica Telegram inviata")
             else:
                 self.log("ERROR", f"Errore Telegram: {response.status_code}")
+            
+            
                 
         except Exception as e:
             self.log("ERROR", f"Errore invio Telegram: {e}")
