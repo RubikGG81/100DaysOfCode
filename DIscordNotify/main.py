@@ -12,6 +12,8 @@ import mss
 from dataclasses import dataclass
 import json
 import os
+import configparser
+from logicheapiexchange import BybitTrader
 
 # Carica variabili d'ambiente da file .env se presente
 try:
@@ -233,6 +235,7 @@ class AdvancedDiscordMonitor:
         ttk.Button(button_frame, text="Test OCR", command=self.test_ocr).pack(side="left", padx=5)
         ttk.Button(button_frame, text="Avvia Monitor", command=self.start_monitor).pack(side="left", padx=5)
         ttk.Button(button_frame, text="Ferma Monitor", command=self.stop_monitor).pack(side="left", padx=5)
+        ttk.Button(button_frame, text="Salva Configurazione", command=self.save_config).pack(side="left", padx=5)
         
         # Log con filtri
         log_frame = ttk.LabelFrame(self.root, text="Log Attività")
@@ -268,9 +271,11 @@ class AdvancedDiscordMonitor:
         
         # Carica messaggi precedenti all'avvio
         self.last_messages = self.load_last_messages()
+        self.load_config()
         
         # Bind evento di chiusura per salvare i messaggi
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.bybit_trader = BybitTrader() # Inizializza il trader Bybit
         
     @dataclass
     class eliz_data_trade:
@@ -282,6 +287,7 @@ class AdvancedDiscordMonitor:
         stop_loss: any
         take_profit: any
         e_retest: bool
+        side: str # 'Buy' or 'Sell'
         
     def select_area(self):
         """Avvia la selezione dell'area con interfaccia grafica"""
@@ -398,7 +404,7 @@ class AdvancedDiscordMonitor:
         
         self.log("INFO", "Monitoraggio fermato")
     
-    def monitor_loop(self):  # sourcery skip: low-code-quality
+    def monitor_loop(self):  # sourcery skip: low-code-quality, use-fstring-for-concatenation
         """Loop principale di monitoraggio"""
         import pytesseract
         import hashlib
@@ -411,6 +417,7 @@ class AdvancedDiscordMonitor:
                 # Cattura screenshot dell'area
                 x, y, w, h = self.monitor_area
                 screenshot = pyautogui.screenshot(region=(x, y, w, h))
+                self.log("INFO", "Screen taken")
                 
                 # Converti per OpenCV
                 img_cv = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
@@ -457,6 +464,45 @@ class AdvancedDiscordMonitor:
                                 self.log("INFO", f"Nuovo messaggio rilevato: {message[:50]}...")
                                 self.send_telegram_notification(message)
                                 
+                                # --- Inizio Logica di Trading ---
+                                if "Current Trade" in message: # Assumendo che "Current Trade" indichi un nuovo trade da eseguire
+                                    trade_data = self.parse_eliz_trade(message)
+                                    self.log("INFO", f"Trade rilevato: {trade_data.token_name} - Entry: {trade_data.entry_price} - Side: {trade_data.side}")
+
+                                    symbol = trade_data.token_name + "USDT" # Assumendo coppia USDT
+                                    qty = str(trade_data.bought_token_amount) # Converti in stringa per API
+                                    side = trade_data.side
+                                    
+                                    if trade_data.limit_order:
+                                        order_type = "Limit"
+                                        price = str(trade_data.entry_price)
+                                    else:
+                                        order_type = "Market"
+                                        price = None # Gli ordini a mercato non richiedono un prezzo
+
+                                    # Piazza l'ordine
+                                    order_result = self.bybit_trader.place_order(symbol, side, qty, order_type, price)
+                                    if order_result and order_result['retCode'] == 0:
+                                        self.log("INFO", f"Ordine {order_type} piazzato con successo per {symbol}: {order_result['result']['orderId']}")
+                                        
+                                        # Se è un ordine a mercato, attendi un attimo che la posizione si apra prima di impostare SL/TP
+                                        if order_type == "Market":
+                                            time.sleep(2) # Dai tempo alla posizione di aprirsi
+
+                                        # Imposta SL/TP se disponibili
+                                        if trade_data.stop_loss or trade_data.take_profit:
+                                            sl = str(trade_data.stop_loss) if trade_data.stop_loss else None
+                                            tp = str(trade_data.take_profit) if trade_data.take_profit else None
+                                            
+                                            sl_tp_result = self.bybit_trader.set_stop_loss_take_profit(symbol, sl, tp)
+                                            if sl_tp_result and sl_tp_result['retCode'] == 0:
+                                                self.log("INFO", f"SL/TP impostati con successo per {symbol}.")
+                                            else:
+                                                self.log("ERROR", f"Errore nell'impostazione SL/TP per {symbol}: {sl_tp_result.get('retMsg', 'Errore sconosciuto')}")
+                                    else:
+                                        self.log("ERROR", f"Errore nel piazzamento dell'ordine {order_type} per {symbol}: {order_result.get('retMsg', 'Errore sconosciuto')}")
+                                # --- Fine Logica di Trading ---
+                                
                                 # Aggiungi a storico
                                 message_hash = hashlib.md5(message.encode()).hexdigest()
                                 self.last_messages.append(message_hash)
@@ -481,6 +527,7 @@ class AdvancedDiscordMonitor:
                 time.sleep(5)
     
     def detect_new_messages(self, text, last_messages):
+        # sourcery skip: use-named-expression
         """Rileva nuovi messaggi nel testo"""
         new_messages = []
         
@@ -503,25 +550,21 @@ class AdvancedDiscordMonitor:
             
             if has_keyword:
                 # Salva messaggio precedente
+                current_message = self.remove_before_lo_or_sh_ww_simple(line)
                 if current_message:
-                    message_text = '\n'.join(current_message)
-                    message_hash = hashlib.md5(message_text.encode()).hexdigest()
+                    
+                    message_hash = hashlib.md5(current_message.encode()).hexdigest()
                     
                     if message_hash not in last_messages:
-                        new_messages.append(message_text)
-                
+                        new_messages.append(current_message)
+                    else:
+                        self.log("INFO", "Notifica Telegram inviata")
                 # Inizia nuovo messaggio
-                current_message = [line]
-            else:
-                current_message.append(line)
+            current_message = []
+            
         
         # Ultimo messaggio
-        if current_message:
-            message_text = '\n'.join(current_message)
-            message_hash = hashlib.md5(message_text.encode()).hexdigest()
-            
-            if message_hash not in last_messages:
-                new_messages.append(message_text)
+        
         
         return new_messages
     
@@ -575,6 +618,27 @@ class AdvancedDiscordMonitor:
         #         # Qui puoi aggiungere logica per gestire il trade
         
         return new_messages
+    
+    def remove_before_lo_or_sh_ww_simple(self, text):  # sourcery skip: use-next
+        """Rimuove caratteri prima di Lo/Sh, rimuove w/ e tutto dopo @"""
+        # 1. Trova la prima occorrenza di "Lo" o "Sh"
+        for i in range(len(text) - 1):
+            if text[i:i+2] in ["Lo", "Sh"]:
+                # Rimuovi tutto prima di Lo/Sh
+                result = text[i:]
+                
+                # 2. Rimuovi "w/" se presente
+                result = result.replace("w/", "")
+                
+                # 3. Trova il primo "@" e rimuovi tutto da lì in poi
+                at_pos = result.find("@")
+                if at_pos != -1:
+                    result = result[:at_pos]
+                
+                return result.strip()  # Rimuovi spazi extra
+        return ""
+    
+    
     
     def send_telegram_notification(self, message):
         """Invia notifica a Telegram"""
@@ -651,6 +715,7 @@ class AdvancedDiscordMonitor:
             stop_loss = ""
             take_profit = ""
             e_retest = False
+            side = "" # Inizializza il campo side
             
             # Dividi il testo in righe
             lines = text.strip().split('\n')
@@ -660,6 +725,11 @@ class AdvancedDiscordMonitor:
                 if not line:
                     continue
                 
+                if "long" in line.lower():
+                    side = "Buy"
+                elif "short" in line.lower():
+                    side = "Sell"
+
                 if line.endswith("LIMIT ORDER"):
                     limit_str = line.replace("LIMIT ORDER", "")
                     limit_order = True
@@ -730,7 +800,8 @@ class AdvancedDiscordMonitor:
                 entry_price=entry_price,
                 stop_loss=stop_loss,
                 take_profit=take_profit,
-                e_retest=e_retest
+                e_retest=e_retest,
+                side=side
             )
             
         except Exception as e:
@@ -839,6 +910,81 @@ class AdvancedDiscordMonitor:
         except Exception as e:
             print(f"Errore durante la chiusura: {e}")
             self.root.destroy()
+
+    def save_config(self):
+        """Salva la configurazione corrente nel file config.ini"""
+        config = configparser.ConfigParser()
+        
+        # Sezione Telegram
+        config['telegram'] = {
+            'token': self.telegram_token_entry.get(),
+            'chat_id': self.telegram_chat_entry.get()
+        }
+        
+        # Sezione Monitoraggio
+        config['monitoring'] = {
+            'interval': self.interval_var.get(),
+            'sensitivity': self.sensitivity_var.get(),
+            'source_filter': self.source_filter.get(),
+            'keywords': self.keywords_entry.get(),
+            'keywords_eliz': self.keywords_entry_eliz.get()
+        }
+        
+        # Sezione Area
+        if self.monitor_area:
+            x, y, w, h = self.monitor_area
+            config['area'] = {
+                'x': str(x),
+                'y': str(y),
+                'width': str(w),
+                'height': str(h)
+            }
+            
+        try:
+            with open('config.ini', 'w') as configfile:
+                config.write(configfile)
+            self.log("INFO", "Configurazione salvata con successo in config.ini")
+        except Exception as e:
+            self.log("ERROR", f"Errore nel salvataggio della configurazione: {e}")
+
+    def load_config(self):
+        """Carica la configurazione da config.ini"""
+        config = configparser.ConfigParser()
+        try:
+            if os.path.exists('config.ini'):
+                config.read('config.ini')
+                
+                # Carica sezione Telegram
+                if 'telegram' in config:
+                    self.telegram_token_entry.delete(0, tk.END)
+                    self.telegram_token_entry.insert(0, config['telegram'].get('token', ''))
+                    self.telegram_chat_entry.delete(0, tk.END)
+                    self.telegram_chat_entry.insert(0, config['telegram'].get('chat_id', ''))
+                
+                # Carica sezione Monitoraggio
+                if 'monitoring' in config:
+                    self.interval_var.set(config['monitoring'].get('interval', '2'))
+                    self.sensitivity_var.set(config['monitoring'].get('sensitivity', '5'))
+                    self.source_filter.set(config['monitoring'].get('source_filter', '@Eliz Challenge'))
+                    self.keywords_entry.delete(0, tk.END)
+                    self.keywords_entry.insert(0, config['monitoring'].get('keywords', 'long,short,@'))
+                    self.keywords_entry_eliz.delete(0, tk.END)
+                    self.keywords_entry_eliz.insert(0, config['monitoring'].get('keywords_eliz', 'current trade'))
+                
+                # Carica sezione Area
+                if 'area' in config:
+                    x = int(config['area'].get('x', '0'))
+                    y = int(config['area'].get('y', '0'))
+                    w = int(config['area'].get('width', '0'))
+                    h = int(config['area'].get('height', '0'))
+                    self.monitor_area = (x, y, w, h)
+                    self.area_label.config(text=f"Area: {x},{y} - {w}x{h}")
+                
+                self.log("INFO", "Configurazione caricata da config.ini")
+            else:
+                self.log("INFO", "Nessun file di configurazione trovato. Utilizzo i valori di default.")
+        except Exception as e:
+            self.log("ERROR", f"Errore nel caricamento della configurazione: {e}")
 
 # Script di avvio semplificato
 class SimpleDiscordMonitor:
