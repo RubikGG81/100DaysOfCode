@@ -2,6 +2,12 @@ import configparser
 from pybit.unified_trading import HTTP
 import time
 
+
+### sito per controllo trade test
+# https://testnet.bybit.com/trade/usdt/BTCUSDT 
+# ###
+
+
 class BybitTrader:
     def __init__(self, config_file='config.ini'):
         self.session = self._get_session(config_file)
