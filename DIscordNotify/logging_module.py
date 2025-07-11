@@ -134,6 +134,7 @@ class LogManager:
             return []
     
     def export_logs(self, start_date, end_date, filename="exported_logs.json"):
+        # sourcery skip: use-contextlib-suppress
         """Esporta i log in un range di date"""
         all_logs = []
         
