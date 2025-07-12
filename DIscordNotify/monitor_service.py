@@ -282,7 +282,7 @@ class HeadlessMonitor:
                 time.sleep(self.interval)
             except Exception as e:
                 logging.error(f"Errore nel loop: {e}", exc_info=True)
-                time.sleep(5)
+                time.sleep(1)
 
 if __name__ == '__main__':
     config = configparser.ConfigParser()

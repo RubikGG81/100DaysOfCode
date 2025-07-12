@@ -10,21 +10,34 @@ import time
 
 class BybitTrader:
     def __init__(self, config_file='config.ini'):
-        self.session = self._get_session(config_file)
+        self.config_file = config_file
+        self.api_key = ""
+        self.api_secret = ""
+        self.session = None
+        self._load_credentials_from_config()
 
-    def _get_session(self, config_file):
-        # sourcery skip: inline-immediately-returned-variable
+    def _load_credentials_from_config(self):
         config = configparser.ConfigParser()
-        config.read(config_file)
-        api_key = config['bybit']['api_key']
-        api_secret = config['bybit']['api_secret']
-        
-        session = HTTP(
-            testnet=True,
-            api_key=api_key,
-            api_secret=api_secret,
-        )
-        return session
+        config.read(self.config_file)
+        if 'bybit' in config:
+            self.api_key = config['bybit'].get('api_key', '')
+            self.api_secret = config['bybit'].get('api_secret', '')
+        self._create_session()
+
+    def _create_session(self):
+        if self.api_key and self.api_secret:
+            self.session = HTTP(
+                testnet=True,
+                api_key=self.api_key,
+                api_secret=self.api_secret,
+            )
+        else:
+            self.session = None # O gestisci l'errore come preferisci
+
+    def set_credentials(self, api_key, api_secret):
+        self.api_key = api_key
+        self.api_secret = api_secret
+        self._create_session() # Ricrea la sessione con le nuove credenziali
 
     def get_balance(self):  # sourcery skip: inline-immediately-returned-variable
         try:

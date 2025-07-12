@@ -9,7 +9,7 @@ class MessageAnalyzer:
         self.keywords_eliz = [kw.strip() for kw in keywords_eliz.split(',') if kw.strip()]
         self.source_filter = source_filter
         self.text_analyzer = TextAnalyzer()
-        self.last_messages = []
+        self.last_messages = self.load_last_messages()
     
     def set_keywords(self, keywords):
         """Imposta le parole chiave generiche"""
@@ -43,8 +43,7 @@ class MessageAnalyzer:
             
             if has_keyword:
                 # Salva messaggio precedente
-                current_message = self.text_analyzer.remove_before_lo_or_sh_ww_simple(line)
-                if current_message:
+                if current_message := self.text_analyzer.remove_before_lo_or_sh_ww_simple(line):
                     message_hash = hashlib.md5(current_message.encode()).hexdigest()
                     
                     if message_hash not in last_messages:
@@ -135,7 +134,7 @@ class MessageAnalyzer:
     
     def update_last_messages(self, new_message_hash):
         """Aggiorna la lista dei messaggi recenti"""
-        self.last_messages.append(new_message_hash)
+        self.last_messages.append(new_message_hash) #Fa update della lista degli ultimi messaggi al volo
         
         # Mantieni solo ultimi 30 messaggi
         if len(self.last_messages) > 30:

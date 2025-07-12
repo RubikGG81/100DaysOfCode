@@ -1,0 +1,368 @@
+[
+  {
+    "timestamp": "06:53:27",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-12T06:53:27.609465"
+  },
+  {
+    "timestamp": "06:59:21",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-12T06:59:21.978374"
+  },
+  {
+    "timestamp": "07:00:39",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-12T07:00:39.827234"
+  },
+  {
+    "timestamp": "07:23:22",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-12T07:23:22.824266"
+  },
+  {
+    "timestamp": "07:24:02",
+    "level": "SUCCESS",
+    "message": "Configurazione salvata con successo in config.ini",
+    "datetime": "2025-07-12T07:24:02.473156"
+  },
+  {
+    "timestamp": "07:24:02",
+    "level": "INFO",
+    "message": "Credenziali API aggiornate e salvate.",
+    "datetime": "2025-07-12T07:24:02.488167"
+  },
+  {
+    "timestamp": "07:24:45",
+    "level": "SUCCESS",
+    "message": "Configurazione salvata con successo in config.ini",
+    "datetime": "2025-07-12T07:24:45.038493"
+  },
+  {
+    "timestamp": "07:24:45",
+    "level": "INFO",
+    "message": "Credenziali API aggiornate e salvate.",
+    "datetime": "2025-07-12T07:24:45.047198"
+  },
+  {
+    "timestamp": "07:29:18",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-12T07:29:18.724515"
+  },
+  {
+    "timestamp": "07:31:34",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-12T07:31:34.685769"
+  },
+  {
+    "timestamp": "07:40:05",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-12T07:40:05.207153"
+  },
+  {
+    "timestamp": "07:40:08",
+    "level": "INFO",
+    "message": "Monitoraggio avviato",
+    "datetime": "2025-07-12T07:40:08.968757"
+  },
+  {
+    "timestamp": "07:40:16",
+    "level": "INFO",
+    "message": "Monitoraggio fermato",
+    "datetime": "2025-07-12T07:40:16.317348"
+  },
+  {
+    "timestamp": "07:42:15",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-12T07:42:15.777173"
+  },
+  {
+    "timestamp": "07:42:20",
+    "level": "INFO",
+    "message": "Monitoraggio avviato",
+    "datetime": "2025-07-12T07:42:20.129049"
+  },
+  {
+    "timestamp": "07:42:27",
+    "level": "INFO",
+    "message": "Monitoraggio fermato",
+    "datetime": "2025-07-12T07:42:27.625158"
+  },
+  {
+    "timestamp": "07:42:32",
+    "level": "INFO",
+    "message": "Monitoraggio avviato",
+    "datetime": "2025-07-12T07:42:32.693580"
+  },
+  {
+    "timestamp": "07:42:40",
+    "level": "INFO",
+    "message": "Monitoraggio fermato",
+    "datetime": "2025-07-12T07:42:40.230572"
+  },
+  {
+    "timestamp": "07:45:58",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-12T07:45:58.804853"
+  },
+  {
+    "timestamp": "07:48:13",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-12T07:48:13.456858"
+  },
+  {
+    "timestamp": "07:50:05",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-12T07:50:05.063837"
+  },
+  {
+    "timestamp": "07:58:55",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-12T07:58:55.454569"
+  },
+  {
+    "timestamp": "08:01:23",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-12T08:01:23.323498"
+  },
+  {
+    "timestamp": "08:01:29",
+    "level": "SUCCESS",
+    "message": "Configurazione salvata con successo in config.ini",
+    "datetime": "2025-07-12T08:01:29.885461"
+  },
+  {
+    "timestamp": "08:01:29",
+    "level": "INFO",
+    "message": "Credenziali API aggiornate e salvate.",
+    "datetime": "2025-07-12T08:01:29.895465"
+  },
+  {
+    "timestamp": "08:02:13",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-12T08:02:13.519749"
+  },
+  {
+    "timestamp": "08:02:17",
+    "level": "SUCCESS",
+    "message": "Configurazione salvata con successo in config.ini",
+    "datetime": "2025-07-12T08:02:17.938416"
+  },
+  {
+    "timestamp": "08:02:17",
+    "level": "INFO",
+    "message": "Credenziali API aggiornate e salvate.",
+    "datetime": "2025-07-12T08:02:17.957379"
+  },
+  {
+    "timestamp": "08:02:20",
+    "level": "SUCCESS",
+    "message": "Configurazione salvata con successo in config.ini",
+    "datetime": "2025-07-12T08:02:20.434934"
+  },
+  {
+    "timestamp": "08:02:20",
+    "level": "INFO",
+    "message": "Credenziali API aggiornate e salvate.",
+    "datetime": "2025-07-12T08:02:20.454922"
+  },
+  {
+    "timestamp": "08:04:39",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-12T08:04:39.851530"
+  },
+  {
+    "timestamp": "08:17:44",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-12T08:17:44.587243"
+  },
+  {
+    "timestamp": "08:17:49",
+    "level": "INFO",
+    "message": "Monitoraggio avviato",
+    "datetime": "2025-07-12T08:17:49.513966"
+  },
+  {
+    "timestamp": "08:17:52",
+    "level": "INFO",
+    "message": "Monitoraggio fermato",
+    "datetime": "2025-07-12T08:17:52.203144"
+  },
+  {
+    "timestamp": "08:20:42",
+    "level": "INFO",
+    "message": "Area selezionata: 864,1203 - 493x65",
+    "datetime": "2025-07-12T08:20:42.294441"
+  },
+  {
+    "timestamp": "08:20:54",
+    "level": "INFO",
+    "message": "Test OCR completato. Testo rilevato: 70 caratteri",
+    "datetime": "2025-07-12T08:20:54.455653"
+  },
+  {
+    "timestamp": "08:20:58",
+    "level": "INFO",
+    "message": "Monitoraggio avviato",
+    "datetime": "2025-07-12T08:20:58.849255"
+  },
+  {
+    "timestamp": "08:21:18",
+    "level": "INFO",
+    "message": "Nuovo messaggio rilevato: Long: ETH Entry: 2905-2882 SL:2790...",
+    "datetime": "2025-07-12T08:21:18.498035"
+  },
+  {
+    "timestamp": "08:21:18",
+    "level": "SUCCESS",
+    "message": "Notifica Telegram inviata",
+    "datetime": "2025-07-12T08:21:18.738520"
+  },
+  {
+    "timestamp": "08:21:19",
+    "level": "INFO",
+    "message": "Nuovo messaggio rilevato: Long: ETH Entry: 2905-2882 SL:2790...",
+    "datetime": "2025-07-12T08:21:19.966408"
+  },
+  {
+    "timestamp": "08:21:20",
+    "level": "SUCCESS",
+    "message": "Notifica Telegram inviata",
+    "datetime": "2025-07-12T08:21:20.196354"
+  },
+  {
+    "timestamp": "08:21:21",
+    "level": "INFO",
+    "message": "Nuovo messaggio rilevato: Long: ETH Entry: 2905-2882 SL: 2790...",
+    "datetime": "2025-07-12T08:21:21.432925"
+  },
+  {
+    "timestamp": "08:21:21",
+    "level": "SUCCESS",
+    "message": "Notifica Telegram inviata",
+    "datetime": "2025-07-12T08:21:21.601732"
+  },
+  {
+    "timestamp": "08:21:30",
+    "level": "INFO",
+    "message": "Monitoraggio fermato",
+    "datetime": "2025-07-12T08:21:30.085820"
+  },
+  {
+    "timestamp": "09:50:19",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-12T09:50:19.835110"
+  },
+  {
+    "timestamp": "09:51:16",
+    "level": "INFO",
+    "message": "Area selezionata: 890,1205 - 447x66",
+    "datetime": "2025-07-12T09:51:16.563414"
+  },
+  {
+    "timestamp": "09:51:20",
+    "level": "INFO",
+    "message": "Test OCR completato. Testo rilevato: 72 caratteri",
+    "datetime": "2025-07-12T09:51:20.473043"
+  },
+  {
+    "timestamp": "09:51:39",
+    "level": "INFO",
+    "message": "Monitoraggio avviato",
+    "datetime": "2025-07-12T09:51:39.911329"
+  },
+  {
+    "timestamp": "09:51:53",
+    "level": "INFO",
+    "message": "Nuovo messaggio rilevato: Long: ETH Entry: 2905-2882 SL: 2790:...",
+    "datetime": "2025-07-12T09:51:53.020965"
+  },
+  {
+    "timestamp": "09:51:53",
+    "level": "SUCCESS",
+    "message": "Notifica Telegram inviata",
+    "datetime": "2025-07-12T09:51:53.235130"
+  },
+  {
+    "timestamp": "09:51:54",
+    "level": "INFO",
+    "message": "Nuovo messaggio rilevato: Long: ETH Entry: 2905-2882 SL: 2790...",
+    "datetime": "2025-07-12T09:51:54.481670"
+  },
+  {
+    "timestamp": "09:51:54",
+    "level": "SUCCESS",
+    "message": "Notifica Telegram inviata",
+    "datetime": "2025-07-12T09:51:54.638457"
+  },
+  {
+    "timestamp": "09:52:33",
+    "level": "INFO",
+    "message": "Nuovo messaggio rilevato: Lone |=ijis|/=tin'p 2210552882 SL: 2790...",
+    "datetime": "2025-07-12T09:52:33.050600"
+  },
+  {
+    "timestamp": "09:52:33",
+    "level": "SUCCESS",
+    "message": "Notifica Telegram inviata",
+    "datetime": "2025-07-12T09:52:33.206815"
+  },
+  {
+    "timestamp": "09:52:49",
+    "level": "INFO",
+    "message": "Nuovo messaggio rilevato: Long: ETH Entry: 2905-2882 SL: 2790|...",
+    "datetime": "2025-07-12T09:52:49.803456"
+  },
+  {
+    "timestamp": "09:52:49",
+    "level": "SUCCESS",
+    "message": "Notifica Telegram inviata",
+    "datetime": "2025-07-12T09:52:49.971871"
+  },
+  {
+    "timestamp": "09:54:42",
+    "level": "INFO",
+    "message": "Monitoraggio fermato",
+    "datetime": "2025-07-12T09:54:42.834724"
+  },
+  {
+    "timestamp": "09:54:46",
+    "level": "INFO",
+    "message": "Monitoraggio avviato",
+    "datetime": "2025-07-12T09:54:46.372510"
+  },
+  {
+    "timestamp": "09:54:53",
+    "level": "INFO",
+    "message": "Monitoraggio fermato",
+    "datetime": "2025-07-12T09:54:53.898118"
+  },
+  {
+    "timestamp": "09:55:05",
+    "level": "INFO",
+    "message": "Monitoraggio avviato",
+    "datetime": "2025-07-12T09:55:05.876300"
+  },
+  {
+    "timestamp": "09:55:56",
+    "level": "INFO",
+    "message": "Monitoraggio fermato",
+    "datetime": "2025-07-12T09:55:56.184088"
+  }
+]
