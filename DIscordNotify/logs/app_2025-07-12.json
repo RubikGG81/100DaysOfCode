@@ -364,5 +364,17 @@
     "level": "INFO",
     "message": "Monitoraggio fermato",
     "datetime": "2025-07-12T09:55:56.184088"
+  },
+  {
+    "timestamp": "10:07:23",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-12T10:07:23.277765"
+  },
+  {
+    "timestamp": "10:08:32",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-12T10:08:32.839846"
   }
 ]

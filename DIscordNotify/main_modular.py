@@ -52,8 +52,8 @@ class AdvancedDiscordMonitor:
     def setup_gui(self):
         """Setup dell'interfaccia grafica"""
         self.root = tk.Tk()
-        self.root.title("Discord Advanced Screen Monitor - Modular")
-        self.root.geometry("400x800")
+        self.root.title("Partial Screen Monitor Capture")
+        self.root.geometry("350x800")
 
         # Definisci stili per i pulsanti
         style = ttk.Style()
@@ -229,7 +229,7 @@ class AdvancedDiscordMonitor:
         if area:
             self.screenshot_manager.set_monitor_area(area)
             x, y, w, h = area
-            self.area_label.config(text=f"Area: {x},{y} - {w}x{h}")
+            self.area_label.config(text=f"{x},{y} - {w}x{h}")
             self.log_manager.info(f"Area selezionata: {x},{y} - {w}x{h}")
         else:
             self.log_manager.warning("Selezione area annullata")
