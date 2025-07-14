@@ -1,5 +1,6 @@
 import pytesseract
 import hashlib
+import re
 from dataclasses import dataclass
 
 class OCRProcessor:
@@ -39,7 +40,18 @@ class eliz_data_trade:
     take_profit: any
     e_retest: bool
     side: str  # 'Buy' or 'Sell'
-
+    
+@dataclass
+class classic_data_trade:
+    limit_order: bool
+    token_name:str
+    balance: int       
+    entry_price: float
+    stop_loss: any
+    take_profit: any
+    side: str  # 'Buy' or 'Sell'
+    
+    
 class TextAnalyzer:
     def __init__(self):
         pass
@@ -62,6 +74,125 @@ class TextAnalyzer:
                 
                 return result.strip()  # Rimuovi spazi extra
         return ""
+    
+    
+    
+    def parse_classic_trade(self, text: str) -> classic_data_trade:
+        """Parser per estrarre i dati del trade dalla stringa di Eliz"""
+        try:
+            # Inizializza variabili con valori di default
+            limit_order = True
+            token_name = ""
+            balance = 1000
+            entry_price = 0.0
+            stop_loss = ""
+            take_profit = ""
+            side = ""
+            
+            # Dividi il testo in righe
+            lines = text.strip().split('\n')
+            
+            for line in lines:
+                line = line.strip()
+                if not line:
+                    continue
+                
+                if "long" in line.lower():
+                    side = "Buy"
+                elif "short" in line.lower():
+                    side = "Sell"
+                
+                #if line.endswith("LIMIT ORDER"):
+                #   limit_str = line.replace("LIMIT ORDER", "")
+                #  limit_order = True
+
+                #Token Name
+                splitted = line.split()  # Fa lo split per controllare il ticker eliminando l'eventuale signature LIMIT
+                token_name = splitted[0] if splitted[0] != "LIMIT" else splitted[1]
+                
+                #Entry Price
+                try:
+                    # Cerca il pattern "Entry: numero-numero-numero..."
+                    pattern = r'Entry:\s*((?:[\d.]+\s*-\s*)*[\d.]+)'
+                    match = re.search(pattern, text)
+                    
+                    if match:
+                        entry_part = match.group(1)
+                        # Pulisce spazi extra e divide per trattini
+                        numbers = []
+                        for num_str in entry_part.split('-'):
+                            num_str = num_str.strip()
+                            if num_str and re.match(r'^\d+\.?\d*$', num_str):
+                                numbers.append(float(num_str))                     
+                                entry_price = numbers[0]                      
+                
+                except Exception as e:
+                    print(f"Errore nell'estrazione dei numeri Entry: {e}")
+                
+                            
+                # Balance
+
+                        
+                # Entry Price
+                elif line.startswith("Entry Price:"):
+                    price_str = line.replace("Entry Price:", "").strip()
+                    try:
+                        entry_price = float(price_str)
+                    except ValueError:
+                        entry_price = 0.0
+                        
+                # Stop Loss - può essere numero o stringa
+                elif line.startswith("Stop Loss:"):
+                    sl_str = line.replace("Stop Loss:", "").strip()
+                    try:
+                        # Prova prima come float
+                        stop_loss = float(sl_str)
+                    except ValueError:
+                        # Se non è un numero, mantieni come stringa
+                        stop_loss = sl_str
+                        
+                # Take Profit - può essere numero o stringa
+                elif line.startswith("Take Profit:"):
+                    tp_str = line.replace("Take Profit:", "").strip()
+                    try:
+                        # Prova prima come float
+                        take_profit = float(tp_str)
+                    except ValueError:
+                        # Se non è un numero, mantieni come stringa
+                        take_profit = tp_str
+                    
+                # EP Retest
+                elif line.startswith("EP Retest:"):
+                    retest_str = line.replace("EP Retest:", "").strip()
+                    e_retest = retest_str.lower() in ['true', 'yes', '1', 'si', 'sì']
+            
+            # Crea e restituisci l'oggetto dataclass
+            return eliz_data_trade(
+                limit_order=limit_order,
+                token_name=token_name,
+                bought_token_amount=bought_token_amount,
+                balance=balance,
+                entry_price=entry_price,
+                stop_loss=stop_loss,
+                take_profit=take_profit,
+                e_retest=e_retest,
+                side=side
+            )
+            
+        except Exception as e:
+            print(f"Errore nel parsing del trade: {e}")
+            # Restituisci un oggetto con valori di default in caso di errore
+            return eliz_data_trade(
+                limit_order=False,
+                token_name="",
+                bought_token_amount=0,
+                balance=0,
+                entry_price=0.0,
+                stop_loss="",
+                take_profit="",
+                e_retest=False,
+                side=""
+            )
     
     def parse_eliz_trade(self, text: str) -> eliz_data_trade:
         """Parser per estrarre i dati del trade dalla stringa di Eliz"""

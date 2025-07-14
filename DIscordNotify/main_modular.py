@@ -361,38 +361,41 @@ class AdvancedDiscordMonitor:
 
                     # OCR
                     text = self.ocr_processor.extract_text(preprocessed_image)
+                    if "spot.png" not in self.screenshot_manager.find_templates_in_image(preprocessed_image):
+                        if text.strip():
+                            # Analizza messaggi
+                            new_messages = self.message_analyzer.analyze_messages(text, self.message_analyzer.last_messages)
 
-                    if text.strip():
-                        # Analizza messaggi
-                        new_messages = self.message_analyzer.analyze_messages(text, self.message_analyzer.last_messages)
+                            for message in new_messages:
+                                if first_message_dropped:
+                                    self.log_manager.info(f"Nuovo messaggio rilevato: {message[:50]}...")
 
-                        for message in new_messages:
-                            if first_message_dropped:
-                                self.log_manager.info(f"Nuovo messaggio rilevato: {message[:50]}...")
+                                    # Invia notifica Telegram
+                                    result = self.telegram_notifier.send_discord_notification(message)
+                                    if result['success']:
+                                        self.log_manager.success("Notifica Telegram inviata")
+                                        message_hash = hashlib.md5(message.encode()).hexdigest()
+                                        self.message_analyzer.update_last_messages(message_hash)
+                                        self.message_analyzer.save_last_messages(self.message_analyzer.last_messages)
+    
+                                    else:
+                                        self.log_manager.error(f"Errore Telegram: {result['error']}")
 
-                                # Invia notifica Telegram
-                                result = self.telegram_notifier.send_discord_notification(message)
-                                if result['success']:
-                                    self.log_manager.success("Notifica Telegram inviata")
-                                    message_hash = hashlib.md5(message.encode()).hexdigest()
-                                    self.message_analyzer.update_last_messages(message_hash)
-                                    self.message_analyzer.save_last_messages(self.message_analyzer.last_messages)
-  
+                                    # Logica di Trading
+                                    if "Current Trade" in message:
+                                        if trade_data := self.message_analyzer.extract_trade_data(message):
+                                            self.log_manager.info(f"Trade rilevato: {trade_data.token_name} - Entry: {trade_data.entry_price} - Side: {trade_data.side}")
+                                            self.execute_trade(trade_data)
+
+                                    # Aggiorna storico messaggi
+                                    
+
                                 else:
-                                    self.log_manager.error(f"Errore Telegram: {result['error']}")
-
-                                # Logica di Trading
-                                if "Current Trade" in message:
-                                    if trade_data := self.message_analyzer.extract_trade_data(message):
-                                        self.log_manager.info(f"Trade rilevato: {trade_data.token_name} - Entry: {trade_data.entry_price} - Side: {trade_data.side}")
-                                        self.execute_trade(trade_data)
-
-                                # Aggiorna storico messaggi
-                                
-
-                            else:
-                                first_message_dropped = True
-                                continue
+                                    first_message_dropped = True
+                                    continue
+                    else:
+                        self.log_manager.error(f"SPOT trade rilevato e saltato")
+                        
 
                 # Aspetta prima del prossimo controllo
                 interval = int(self.interval_var.get())

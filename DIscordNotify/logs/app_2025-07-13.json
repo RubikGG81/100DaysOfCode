@@ -1,0 +1,140 @@
+[
+  {
+    "timestamp": "21:49:54",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-13T21:49:54.818699"
+  },
+  {
+    "timestamp": "22:28:44",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-13T22:28:44.687070"
+  },
+  {
+    "timestamp": "22:28:52",
+    "level": "INFO",
+    "message": "Area selezionata: 1208,833 - 1193x55",
+    "datetime": "2025-07-13T22:28:52.834376"
+  },
+  {
+    "timestamp": "22:28:59",
+    "level": "INFO",
+    "message": "Test OCR completato. Testo rilevato: 452 caratteri",
+    "datetime": "2025-07-13T22:28:59.720950"
+  },
+  {
+    "timestamp": "23:15:19",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-13T23:15:19.688236"
+  },
+  {
+    "timestamp": "23:15:36",
+    "level": "INFO",
+    "message": "Area selezionata: 933,1125 - 400x71",
+    "datetime": "2025-07-13T23:15:36.820507"
+  },
+  {
+    "timestamp": "23:15:43",
+    "level": "INFO",
+    "message": "Monitoraggio avviato",
+    "datetime": "2025-07-13T23:15:43.008628"
+  },
+  {
+    "timestamp": "23:15:54",
+    "level": "INFO",
+    "message": "Monitoraggio fermato",
+    "datetime": "2025-07-13T23:15:54.324535"
+  },
+  {
+    "timestamp": "23:15:56",
+    "level": "INFO",
+    "message": "Monitoraggio avviato",
+    "datetime": "2025-07-13T23:15:56.892623"
+  },
+  {
+    "timestamp": "23:16:00",
+    "level": "INFO",
+    "message": "Monitoraggio fermato",
+    "datetime": "2025-07-13T23:16:00.185569"
+  },
+  {
+    "timestamp": "23:16:07",
+    "level": "INFO",
+    "message": "Area selezionata: 923,1011 - 422x190",
+    "datetime": "2025-07-13T23:16:07.561156"
+  },
+  {
+    "timestamp": "23:16:11",
+    "level": "INFO",
+    "message": "Monitoraggio avviato",
+    "datetime": "2025-07-13T23:16:11.092014"
+  },
+  {
+    "timestamp": "23:17:04",
+    "level": "INFO",
+    "message": "Monitoraggio fermato",
+    "datetime": "2025-07-13T23:17:04.634172"
+  },
+  {
+    "timestamp": "23:17:09",
+    "level": "INFO",
+    "message": "Area selezionata: 931,882 - 404x63",
+    "datetime": "2025-07-13T23:17:09.192613"
+  },
+  {
+    "timestamp": "23:17:10",
+    "level": "INFO",
+    "message": "Monitoraggio avviato",
+    "datetime": "2025-07-13T23:17:10.559858"
+  },
+  {
+    "timestamp": "23:17:14",
+    "level": "INFO",
+    "message": "Monitoraggio fermato",
+    "datetime": "2025-07-13T23:17:14.901756"
+  },
+  {
+    "timestamp": "23:17:25",
+    "level": "INFO",
+    "message": "Area selezionata: 929,883 - 413x183",
+    "datetime": "2025-07-13T23:17:25.633014"
+  },
+  {
+    "timestamp": "23:17:27",
+    "level": "INFO",
+    "message": "Monitoraggio avviato",
+    "datetime": "2025-07-13T23:17:27.224032"
+  },
+  {
+    "timestamp": "23:17:27",
+    "level": "INFO",
+    "message": "Nuovo messaggio rilevato: Long: ALU Entry: 0.006935 SL: 0.006474...",
+    "datetime": "2025-07-13T23:17:27.421138"
+  },
+  {
+    "timestamp": "23:17:27",
+    "level": "SUCCESS",
+    "message": "Notifica Telegram inviata",
+    "datetime": "2025-07-13T23:17:27.616626"
+  },
+  {
+    "timestamp": "23:17:27",
+    "level": "INFO",
+    "message": "Nuovo messaggio rilevato: Long: FARTCOIN Entry: 1.3097-1.2437 SL: 11968...",
+    "datetime": "2025-07-13T23:17:27.626028"
+  },
+  {
+    "timestamp": "23:17:27",
+    "level": "SUCCESS",
+    "message": "Notifica Telegram inviata",
+    "datetime": "2025-07-13T23:17:27.783599"
+  },
+  {
+    "timestamp": "23:17:39",
+    "level": "INFO",
+    "message": "Monitoraggio fermato",
+    "datetime": "2025-07-13T23:17:39.440206"
+  }
+]

@@ -7,6 +7,7 @@ from PIL import Image, ImageTk
 import time
 import mss
 from dataclasses import dataclass
+import os
 
 class AreaSelector:
     def __init__(self, callback):
@@ -137,8 +138,23 @@ class AreaSelector:
         self.callback(None)
 
 class ScreenshotManager:
-    def __init__(self, monitor_area=None):
+    def __init__(self, monitor_area=None, templates_dir=None):
         self.monitor_area = monitor_area
+        self.loaded_templates = {}
+        if templates_dir:
+            if not os.path.isdir(templates_dir):
+                raise FileNotFoundError(f"La directory dei template non è stata trovata: {templates_dir}")
+            
+            for filename in os.listdir(templates_dir):
+                if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                    path = os.path.join(templates_dir, filename)
+                    template_data = cv2.imread(path, 0) # Carica in scala di grigi
+                    if template_data is not None:
+                        self.loaded_templates[filename] = template_data
+                    else:
+                        print(f"Attenzione: impossibile caricare il template {path}")
+            print(f"Caricati {len(self.loaded_templates)} template dalla directory: {templates_dir}")
+
     
     def set_monitor_area(self, area):
         """Imposta l'area di monitoraggio"""
@@ -184,3 +200,196 @@ class ScreenshotManager:
         cv2.imwrite(filename, img)
         cv2.waitKey(0)
         cv2.destroyAllWindows() 
+
+    def find_template(self, template_path, threshold=0.8):
+        """
+        Cerca un'immagine template all'interno dell'area monitorata.
+        Restituisce le coordinate del match se trovato, altrimenti None.
+        """
+        if not self.monitor_area:
+            raise ValueError("Area di monitoraggio non impostata")
+
+        # Cattura lo screenshot dell'area
+        screenshot_pil = self.capture_screenshot()
+        screenshot_cv = cv2.cvtColor(np.array(screenshot_pil), cv2.COLOR_RGB2BGR)
+        
+        # Carica il template
+        template = cv2.imread(template_path)
+        if template is None:
+            raise FileNotFoundError(f"Immagine template non trovata a: {template_path}")
+
+        # Esegui il template matching
+        res = cv2.matchTemplate(screenshot_cv, template, cv2.TM_CCOEFF_NORMED)
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+
+        if max_val >= threshold:
+            # Le coordinate sono relative all'area dello screenshot
+            top_left = max_loc
+            h, w, _ = template.shape
+            bottom_right = (top_left[0] + w, top_left[1] + h)
+            
+            # Converte le coordinate in coordinate globali dello schermo
+            global_x = self.monitor_area[0] + top_left[0]
+            global_y = self.monitor_area[1] + top_left[1]
+            
+            return (global_x, global_y, w, h)
+        
+        return None
+
+    def find_templates_in_image(self, image_to_search, threshold=0.8):
+        """
+        Cerca i template pre-caricati all'interno di un'immagine fornita.
+        Restituisce un set con i nomi dei file dei template trovati.
+        """
+        if not self.loaded_templates:
+            print("Attenzione: Nessun template è stato caricato. La ricerca non verrà eseguita.")
+            return set()
+
+        if isinstance(image_to_search, Image.Image):
+            image_cv = cv2.cvtColor(np.array(image_to_search), cv2.COLOR_RGB2BGR)
+        elif isinstance(image_to_search, np.ndarray):
+            image_cv = image_to_search
+        else:
+            raise TypeError("Il formato dell'immagine non è supportato. Fornire un'immagine PIL o un array NumPy.")
+
+        search_gray = cv2.cvtColor(image_cv, cv2.COLOR_BGR2GRAY)
+        
+        found_templates = set()
+
+        for template_filename, template_data in self.loaded_templates.items():
+            res = cv2.matchTemplate(search_gray, template_data, cv2.TM_CCOEFF_NORMED)
+            min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+
+            if max_val >= threshold:
+                found_templates.add(template_filename)
+        
+        return found_templates
+
+@dataclass
+class ScreenshotResult:
+    image: Image.Image
+    preprocessed_image: np.ndarray
+
+def select_area_and_get_screenshot():
+    """Funzione principale per avviare la selezione e catturare lo screenshot"""
+    
+    selected_area = None
+    
+    def on_area_selected(area):
+        nonlocal selected_area
+        selected_area = area
+    
+    selector = AreaSelector(callback=on_area_selected)
+    selector.start_selection()
+    
+    if selected_area:
+        manager = ScreenshotManager(monitor_area=selected_area)
+        
+        # Cattura e preprocessa
+        preprocessed_img = manager.capture_and_preprocess()
+        
+        # Cattura un'immagine non processata per il salvataggio
+        original_img = manager.capture_screenshot()
+        
+        return ScreenshotResult(image=original_img, preprocessed_image=preprocessed_img)
+    
+    return None
+
+def find_template_on_screen(template_path, threshold=0.8):
+    """
+    Seleziona un'area dello schermo e cerca un'immagine template al suo interno.
+    """
+    selected_area = None
+    
+    def on_area_selected(area):
+        nonlocal selected_area
+        selected_area = area
+        
+    selector = AreaSelector(callback=on_area_selected)
+    selector.start_selection()
+    
+    if selected_area:
+        manager = ScreenshotManager(monitor_area=selected_area)
+        print(f"Area selezionata: {selected_area}")
+        print(f"Ricerca del template: {template_path}")
+        
+        match_location = manager.find_template(template_path, threshold)
+        
+        if match_location:
+            print(f"Template trovato alle coordinate globali: {match_location}")
+            return match_location
+        else:
+            print("Template non trovato.")
+            return None
+    else:
+        print("Selezione dell'area annullata.")
+        return None
+
+if __name__ == '__main__':
+    # Esempio di utilizzo del nuovo metodo find_templates_in_image
+
+    # 1. Definisci il percorso della cartella dei template
+    templates_folder = "templates"
+    if not os.path.exists(templates_folder):
+        print(f"Creazione della directory dei template: {templates_folder}")
+        os.makedirs(templates_folder)
+
+        # Crea due template fittizi
+        print("Creazione di template fittizi...")
+        template1 = np.zeros((40, 80, 3), dtype=np.uint8)
+        cv2.putText(template1, 'Btn_OK', (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+        cv2.imwrite(os.path.join(templates_folder, "ok_button.png"), template1)
+
+        template2 = np.zeros((50, 50, 3), dtype=np.uint8)
+        cv2.putText(template2, 'X', (15, 35), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 2)
+        cv2.imwrite(os.path.join(templates_folder, "close_icon.png"), template2)
+
+    # 2. Simula di avere un'immagine già catturata
+    screenshot_to_search_path = "test_screenshot_multi.png"
+    if not os.path.exists(screenshot_to_search_path):
+        print(f"Creazione di un'immagine di ricerca fittizia: {screenshot_to_search_path}")
+        dummy_screenshot = np.full((400, 500, 3), (20, 20, 20), dtype=np.uint8)
+        
+        # Posiziona i template nell'immagine di ricerca
+        ok_btn_img = cv2.imread(os.path.join(templates_folder, "ok_button.png"))
+        close_icon_img = cv2.imread(os.path.join(templates_folder, "close_icon.png"))
+        
+        dummy_screenshot[50:90, 100:180] = ok_btn_img      # Posizione del pulsante OK
+        dummy_screenshot[200:250, 300:350] = close_icon_img # Posizione dell'icona di chiusura
+        cv2.imwrite(screenshot_to_search_path, dummy_screenshot)
+
+    # 3. Carica l'immagine in cui cercare
+    try:
+        # 4. Crea un'istanza di ScreenshotManager UNA SOLA VOLTA, caricando i template
+        print("--- Inizializzazione del Manager ---")
+        manager = ScreenshotManager(templates_dir=templates_folder)
+        print("---------------------------------")
+
+        # 5. Carica l'immagine in cui cercare
+        image_to_search = Image.open(screenshot_to_search_path)
+        print(f"\nImmagine di ricerca caricata: {screenshot_to_search_path}")
+
+        # 6. Esegui la ricerca usando i template pre-caricati
+        found_template_names = manager.find_templates_in_image(
+            image_to_search=image_to_search,
+            threshold=0.8
+        )
+
+        # 7. Controlla i risultati
+        if found_template_names:
+            print(f"\nTrovati {len(found_template_names)} template nell'immagine:")
+            for name in found_template_names:
+                print(f"  - Presente: {name}")
+            
+            # Esempio di come verificare la presenza di un template specifico
+            if "ok_button.png" in found_template_names:
+                print("\nConferma: Il template 'ok_button.png' è stato trovato.")
+
+        else:
+            print("Nessun template è stato trovato nell'immagine fornita.")
+
+    except FileNotFoundError as e:
+        print(f"Errore: {e}. Assicurati che i file e le cartelle esistano.")
+    except Exception as e:
+        print(f"Si è verificato un errore inaspettato: {e}")
+ 
