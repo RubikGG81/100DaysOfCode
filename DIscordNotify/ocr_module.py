@@ -134,7 +134,7 @@ class TextAnalyzer:
 
                         
                 # Entry Price
-                elif line.startswith("Entry Price:"):
+                if line.startswith("Entry Price:"):
                     price_str = line.replace("Entry Price:", "").strip()
                     try:
                         entry_price = float(price_str)
