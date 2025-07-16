@@ -1,11 +1,22 @@
+import configparser
 import pytesseract
 import hashlib
 import re
 from dataclasses import dataclass
 
 class OCRProcessor:
-    def __init__(self):
+    def __init__(self, config_file='config.ini'):
+        self.config_file = config_file
         self.custom_config = r'--oem 3 --psm 6 -l eng'
+        self.slippage = ""
+        self._load_values_from_config()
+
+    def _load_values_from_config(self):
+        config = configparser.ConfigParser()
+        config.read(self.config_file)
+        if 'slippage' in config:
+            self.slippage = config['slippage'].get('value', '0')
+        
     
     def extract_text(self, preprocessed_image):
         """Estrae testo da un'immagine preprocessata"""
@@ -114,60 +125,48 @@ class TextAnalyzer:
                 try:
                     # Cerca il pattern "Entry: numero-numero-numero..."
                     pattern = r'Entry:\s*((?:[\d.]+\s*-\s*)*[\d.]+)'
-                    match = re.search(pattern, text)
+                    match = re.search(pattern, line)
                     
                     if match:
-                        entry_part = match.group(1)
+                        entry_part = match[1]
                         # Pulisce spazi extra e divide per trattini
                         numbers = []
                         for num_str in entry_part.split('-'):
                             num_str = num_str.strip()
                             if num_str and re.match(r'^\d+\.?\d*$', num_str):
                                 numbers.append(float(num_str))                     
-                                entry_price = numbers[0]                      
+                                entry_price = (numbers[0]*slippage)/100                  
                 
                 except Exception as e:
                     print(f"Errore nell'estrazione dei numeri Entry: {e}")
                 
-                            
-                # Balance
-
-                        
-                # Entry Price
-                if line.startswith("Entry Price:"):
-                    price_str = line.replace("Entry Price:", "").strip()
-                    try:
-                        entry_price = float(price_str)
-                    except ValueError:
-                        entry_price = 0.0
                         
                 # Stop Loss - può essere numero o stringa
-                elif line.startswith("Stop Loss:"):
-                    sl_str = line.replace("Stop Loss:", "").strip()
+                match = re.search(r'SL:\s*(\w+)', line)
+                if match:
                     try:
                         # Prova prima come float
-                        stop_loss = float(sl_str)
+                        stop_loss = float(match[1])
                     except ValueError:
                         # Se non è un numero, mantieni come stringa
-                        stop_loss = sl_str
+                        stop_loss = match[1]
                         
                 # Take Profit - può essere numero o stringa
-                elif line.startswith("Take Profit:"):
-                    tp_str = line.replace("Take Profit:", "").strip()
+                match = re.search(r'TPs:\s*(\w+)', line)
+                if match:
                     try:
                         # Prova prima come float
-                        take_profit = float(tp_str)
+                        take_profit = float(match[1])
                     except ValueError:
                         # Se non è un numero, mantieni come stringa
-                        take_profit = tp_str
-                    
-                # EP Retest
-                elif line.startswith("EP Retest:"):
-                    retest_str = line.replace("EP Retest:", "").strip()
-                    e_retest = retest_str.lower() in ['true', 'yes', '1', 'si', 'sì']
+                        take_profit = match[1]
+                else:
+                    take_profit = ""
+                
+                
             
             # Crea e restituisci l'oggetto dataclass
-            return eliz_data_trade(
+            return classic_data_trade(
                 limit_order=limit_order,
                 token_name=token_name,
                 bought_token_amount=bought_token_amount,
@@ -175,7 +174,6 @@ class TextAnalyzer:
                 entry_price=entry_price,
                 stop_loss=stop_loss,
                 take_profit=take_profit,
-                e_retest=e_retest,
                 side=side
             )
             

@@ -1,0 +1,14 @@
+[
+  {
+    "timestamp": "14:09:54",
+    "level": "INFO",
+    "message": "Nessun file di configurazione trovato. Utilizzo i valori di default.",
+    "datetime": "2025-07-14T14:09:54.041063"
+  },
+  {
+    "timestamp": "14:14:49",
+    "level": "INFO",
+    "message": "Nessun file di configurazione trovato. Utilizzo i valori di default.",
+    "datetime": "2025-07-14T14:14:49.926033"
+  }
+]

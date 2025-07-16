@@ -4,5 +4,77 @@
     "level": "INFO",
     "message": "Configurazione caricata da config.ini",
     "datetime": "2025-07-14T13:39:42.098009"
+  },
+  {
+    "timestamp": "13:55:32",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-14T13:55:32.113086"
+  },
+  {
+    "timestamp": "13:58:57",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-14T13:58:57.358601"
+  },
+  {
+    "timestamp": "13:59:06",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-14T13:59:06.042759"
+  },
+  {
+    "timestamp": "13:59:31",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-14T13:59:31.974443"
+  },
+  {
+    "timestamp": "14:00:50",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-14T14:00:50.835926"
+  },
+  {
+    "timestamp": "14:01:14",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-14T14:01:14.436150"
+  },
+  {
+    "timestamp": "14:02:16",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-14T14:02:16.632974"
+  },
+  {
+    "timestamp": "14:04:59",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-14T14:04:59.738410"
+  },
+  {
+    "timestamp": "14:06:08",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-14T14:06:08.183861"
+  },
+  {
+    "timestamp": "14:09:20",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-14T14:09:20.802753"
+  },
+  {
+    "timestamp": "14:15:22",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-14T14:15:22.961426"
+  },
+  {
+    "timestamp": "22:48:31",
+    "level": "INFO",
+    "message": "Configurazione caricata da config.ini",
+    "datetime": "2025-07-14T22:48:31.774030"
   }
 ]

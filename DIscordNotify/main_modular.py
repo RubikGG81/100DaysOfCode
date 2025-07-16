@@ -69,12 +69,30 @@ class AdvancedDiscordMonitor:
         api_config_frame.pack(fill="x", padx=10, pady=5)
         ttk.Button(api_config_frame, text="Configurazione API", command=self.show_api_config_window, style="Bold.TButton").pack(fill="x", pady=2)
 
-        # Impostazioni monitoraggio
-        settings_frame = ttk.LabelFrame(self.root, text="Impostazioni Monitoraggio")
-        settings_frame.pack(fill="x", padx=10, pady=5)
+        # Frame contenitore per le impostazioni, per affiancare i due frame
+        top_settings_container = ttk.Frame(self.root)
+        top_settings_container.pack(fill="x", padx=10, pady=5)
+        
+        # Configura le colonne del contenitore per dividere lo spazio equamente (circa 175px per lato)
+        top_settings_container.grid_columnconfigure(0, weight=1, minsize=160)
+        top_settings_container.grid_columnconfigure(1, weight=1, minsize=160)
+
+        # Frame Impostazioni monitoraggio (a sinistra)
+        settings_frame = ttk.LabelFrame(top_settings_container, text="Impostazioni Monitoraggio")
+        settings_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 5))
+
+        # Frame Settaggi Trades (a destra)
+        trade_settings_frame = ttk.LabelFrame(top_settings_container, text="Sezione Trading")
+        trade_settings_frame.grid(row=0, column=1, sticky="nsew", padx=(5, 0))
+
+        # Pulsante dentro il frame Settaggi Trades
+        trade_button = ttk.Button(trade_settings_frame, text="Settaggi Trades", style="Bold.TButton")
+        trade_button.pack(fill="both", expand=True, padx=5, pady=5)
+
+        # --- Contenuto del frame Impostazioni Monitoraggio ---
 
         # Intervallo controllo
-        ttk.Label(settings_frame, text="Intervallo controllo (secondi):").pack(anchor="w")
+        ttk.Label(settings_frame, text="Intervallo controllo (s):").pack(anchor="w")
         self.interval_var = tk.StringVar(value="2")
         interval_spin = ttk.Spinbox(settings_frame, from_=1, to=60, textvariable=self.interval_var)
         interval_spin.pack(anchor="w", padx=5)
@@ -86,20 +104,20 @@ class AdvancedDiscordMonitor:
         sensitivity_spin.pack(anchor="w", padx=5)
 
         # Filtro selezione sorgente
-        ttk.Label(settings_frame, text="Filtro sorgente copiata:").pack(anchor="w")
+        ttk.Label(settings_frame, text="Filtro sorgente:", wraplength=150).pack(anchor="w")
         self.source_filter = ttk.Combobox(settings_frame, values=["@Eliz Challenge","Altri WWG"])
         self.source_filter.set("@Eliz Challenge")
         self.source_filter.pack(anchor="w", padx=5)
 
         # Filtri testo generici
-        ttk.Label(settings_frame, text="Parole chiave generiche (separate da virgola):").pack(anchor="ne")
-        self.keywords_entry = ttk.Entry(settings_frame, width=60)
+        ttk.Label(settings_frame, text="Parole chiave generiche:", wraplength=150).pack(anchor="w")
+        self.keywords_entry = ttk.Entry(settings_frame) # Rimosso width=60
         self.keywords_entry.pack(fill="x", padx=2, pady=2)
         self.keywords_entry.insert(0, "long,short,@")
 
         # Filtri testo specifici @eliz
-        ttk.Label(settings_frame, text="Parole chiave @Eliz (separate da virgola):").pack(anchor="ne")
-        self.keywords_entry_eliz = ttk.Entry(settings_frame, width=60)
+        ttk.Label(settings_frame, text="Parole chiave @Eliz:", wraplength=150).pack(anchor="w")
+        self.keywords_entry_eliz = ttk.Entry(settings_frame) # Rimosso width=60
         self.keywords_entry_eliz.pack(fill="x", padx=2, pady=2)
         self.keywords_entry_eliz.insert(0, "current trade")
 
@@ -345,7 +363,7 @@ class AdvancedDiscordMonitor:
     def monitor_loop(self):
         """Loop principale di monitoraggio"""
         last_hash = None
-        first_message_dropped = False
+        
 
         while self.is_monitoring:
             try:
@@ -367,32 +385,32 @@ class AdvancedDiscordMonitor:
                             new_messages = self.message_analyzer.analyze_messages(text, self.message_analyzer.last_messages)
 
                             for message in new_messages:
-                                if first_message_dropped:
-                                    self.log_manager.info(f"Nuovo messaggio rilevato: {message[:50]}...")
+                                #if first_message_dropped:
+                                self.log_manager.info(f"Nuovo messaggio rilevato: {message[:50]}...")
 
                                     # Invia notifica Telegram
-                                    result = self.telegram_notifier.send_discord_notification(message)
-                                    if result['success']:
-                                        self.log_manager.success("Notifica Telegram inviata")
-                                        message_hash = hashlib.md5(message.encode()).hexdigest()
-                                        self.message_analyzer.update_last_messages(message_hash)
-                                        self.message_analyzer.save_last_messages(self.message_analyzer.last_messages)
+                                result = self.telegram_notifier.send_discord_notification(message)
+                                if result['success']:
+                                    self.log_manager.success("Notifica Telegram inviata")
+                                    message_hash = hashlib.md5(message.encode()).hexdigest()
+                                    self.message_analyzer.update_last_messages(message_hash)
+                                    self.message_analyzer.save_last_messages(self.message_analyzer.last_messages)
     
-                                    else:
-                                        self.log_manager.error(f"Errore Telegram: {result['error']}")
+                                else:
+                                    self.log_manager.error(f"Errore Telegram: {result['error']}")
 
                                     # Logica di Trading
-                                    if "Current Trade" in message:
-                                        if trade_data := self.message_analyzer.extract_trade_data(message):
-                                            self.log_manager.info(f"Trade rilevato: {trade_data.token_name} - Entry: {trade_data.entry_price} - Side: {trade_data.side}")
-                                            self.execute_trade(trade_data)
+                                if "Current Trade" in message:
+                                    if trade_data := self.message_analyzer.extract_trade_data(message):
+                                        self.log_manager.info(f"Trade rilevato: {trade_data.token_name} - Entry: {trade_data.entry_price} - Side: {trade_data.side}")
+                                        self.execute_trade(trade_data)
 
                                     # Aggiorna storico messaggi
                                     
 
-                                else:
-                                    first_message_dropped = True
-                                    continue
+                                #else:
+                                    #first_message_dropped = True
+                                    #continue
                     else:
                         self.log_manager.error(f"SPOT trade rilevato e saltato")
                         

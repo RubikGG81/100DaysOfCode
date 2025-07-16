@@ -270,60 +270,7 @@ class ScreenshotResult:
     image: Image.Image
     preprocessed_image: np.ndarray
 
-def select_area_and_get_screenshot():
-    """Funzione principale per avviare la selezione e catturare lo screenshot"""
-    
-    selected_area = None
-    
-    def on_area_selected(area):
-        nonlocal selected_area
-        selected_area = area
-    
-    selector = AreaSelector(callback=on_area_selected)
-    selector.start_selection()
-    
-    if selected_area:
-        manager = ScreenshotManager(monitor_area=selected_area)
-        
-        # Cattura e preprocessa
-        preprocessed_img = manager.capture_and_preprocess()
-        
-        # Cattura un'immagine non processata per il salvataggio
-        original_img = manager.capture_screenshot()
-        
-        return ScreenshotResult(image=original_img, preprocessed_image=preprocessed_img)
-    
-    return None
 
-def find_template_on_screen(template_path, threshold=0.8):
-    """
-    Seleziona un'area dello schermo e cerca un'immagine template al suo interno.
-    """
-    selected_area = None
-    
-    def on_area_selected(area):
-        nonlocal selected_area
-        selected_area = area
-        
-    selector = AreaSelector(callback=on_area_selected)
-    selector.start_selection()
-    
-    if selected_area:
-        manager = ScreenshotManager(monitor_area=selected_area)
-        print(f"Area selezionata: {selected_area}")
-        print(f"Ricerca del template: {template_path}")
-        
-        match_location = manager.find_template(template_path, threshold)
-        
-        if match_location:
-            print(f"Template trovato alle coordinate globali: {match_location}")
-            return match_location
-        else:
-            print("Template non trovato.")
-            return None
-    else:
-        print("Selezione dell'area annullata.")
-        return None
 
 if __name__ == '__main__':
     # Esempio di utilizzo del nuovo metodo find_templates_in_image
